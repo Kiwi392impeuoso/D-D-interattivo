@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scheda Personaggio D&D</title>
+    <link href="https://fonts.googleapis.com/css2?family=MedievalSharp&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-paper: #f4e4bc;
+            --text-color: #2c1a0b;
+            --accent-red: #8a1c1c;
+            --accent-gold: #c5a00bd7;
+        }
+
+        body {
+            background-color: #1a1a1a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            font-family: 'MedievalSharp', cursive;
+        }
+
+        /* Effetto Pergamena */
+        .character-sheet {
+            background-color: var(--bg-paper);
+            width: 90%;
+            max-width: 500px;
+            padding: 30px;
+            border-radius: 5px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5), inset 0 0 60px rgba(0,0,0,0.1);
+            border: 10px solid #462c18;
+            position: relative;
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--text-color);
+            border-bottom: 2px solid var(--text-color);
+            padding-bottom: 10px;
+            margin-top: 0;
+        }
+
+        .avatar {
+            text-align: center;
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            color: #555;
+        }
+
+        /* Griglia delle Statistiche (Danni/Attributi) */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .stat-box {
+            border: 2px solid var(--text-color);
+            padding: 10px;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.3);
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+        }
+
+        /* Sezione Livello */
+        .level-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(0,0,0,0.05);
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        /* Barra della Vita */
+        .hp-container {
+            margin-bottom: 20px;
+        }
+
+        .hp-bar-bg {
+            background-color: #555;
+            height: 30px;
+            border-radius: 15px;
+            overflow: hidden;
+            border: 2px solid var(--text-color);
+            position: relative;
+        }
+
+        .hp-bar-fill {
+            background-color: var(--accent-red);
+            height: 100%;
+            width: 100%; /* Valore iniziale */
+            transition: width 0.3s ease;
+        }
+
+        .hp-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px black;
+        }
+
+        /* Bottoni */
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        button {
+            background-color: var(--text-color);
+            color: var(--bg-paper);
+            border: none;
+            padding: 10px 20px;
+            font-family: 'MedievalSharp', cursive;
+            font-size: 1rem;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: transform 0.1s;
+            width: 100%;
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+
+        button.heal { background-color: #2ecc71; color: black; }
+        button.damage { background-color: #c0392b; color: white; }
+
+    </style>
+</head>
+<body>
+
+    <div class="character-sheet">
+        <h1 id="charName">Valeros il Coraggioso</h1>
+        <div class="avatar">Guerriero Umano</div>
+
+        <div class="stats-grid">
+            <div class="stat-box">
+                <div class="stat-value" id="strStat"></div>
+                <div class="stat-label">Forza (STR)</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value" id="dmgStat">10</div>
+                <div class="stat-label">Danni Spada</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value" id="acStat">5</div>
+                <div class="stat-label">Classe Armatura</div>
+            </div>
+        </div>
+
+        <div class="level-section">
+            <span>LIVELLO ATTUALE:</span>
+            <span style="font-size: 1.5rem;" id="levelDisplay">1</span>
+            <div>
+                <button onclick=""
+                <button onclick="changeLevel(1)" style="width: auto; padding: 5px 10px;">+</button>
+                <button onclick="changeLevel(-1)" style="width: auto; padding: 5px 10px;">-</button>
+            </div>
+        </div>
+
+        <div class="hp-container">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                <span>Punti Ferita (HP)</span>
+                <span id="hpText">20 / 20</span>
+            </div>
+            <div class="hp-bar-bg">
+                <div class="hp-bar-fill" id="hpBar"></div>
+                <div class="hp-text">SALUTE</div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="damage" onclick="updateHP(-5)">SUBISCI DANNI (-5)</button>
+            <button class="heal" onclick="updateHP(5)">CURATI (+5)</button>
+        </div>
+        
+        <p style="text-align: center; font-size: 0.9rem; margin-top: 20px; opacity: 0.7;" id="logMsg">
+            Pronto all'avventura...
+        </p>
+    </div>
+
+    <script>
+        // --- CONFIGURAZIONE INIZIALE ---
+        let level = 1;
+        let maxHp = 20;
+        let currentHp = 20;
+        let strength = 18;
+
+        // Elementi DOM
+        const elLevel = document.getElementById('levelDisplay');
+        const elHpText = document.getElementById('hpText');
+        const elHpBar = document.getElementById('hpBar');
+        const elLog = document.getElementById('logMsg');
+        const elStr = document.getElementById('strStat');
+
+        // Funzione per aggiornare la UI
+        function render() {
+            // Aggiorna testi
+            elLevel.innerText = level;
+            elHpText.innerText = `${currentHp} / ${maxHp}`;
+            elStr.innerText = strength;
+
+            // Calcola la percentuale della barra vita
+            let percentage = (currentHp / maxHp) * 100;
+            if (percentage < 0) percentage = 0;
+            if (percentage > 100) percentage = 100;
+            
+            elHpBar.style.width = percentage + "%";
+
+            // Cambia colore barra se la vita è bassa
+            if (percentage < 30) {
+                elHpBar.style.backgroundColor = "#c0392b"; // Rosso scuro
+            } else {
+                elHpBar.style.backgroundColor = "#8a1c1c"; // Rosso standard
+            }
+        }
+
+        // Funzione per cambiare la vita
+        function updateHP(amount) {
+            currentHp += amount;
+
+            // Controlli limiti
+            if (currentHp > maxHp) currentHp = maxHp;
+            if (currentHp < 0) currentHp = 0;
+
+            if (amount < 0) log("Hai subito danni!");
+            else log("Ti senti meglio.");
+
+            render();
+        }
+
+        // Funzione per cambiare livello
+        function changeLevel(amount) {
+            let oldLevel = level;
+            level += amount;
+            if (level < 1) level = 1;
+
+            // Se sali di livello, aumentiamo automaticamente la vita massima e la forza
+            if (level > oldLevel) {
+                maxHp += 8; // +8 HP per livello
+                currentHp += 8; // Cura i nuovi HP guadagnati
+                if(level % 4 === 0) strength += 1; // +1 forza ogni 4 livelli
+                log("LEVEL UP! Sei diventato più forte.");
+            } else if (level < oldLevel) {
+                maxHp -= 8;
+                if (currentHp > maxHp) currentHp = maxHp;
+                if(oldLevel % 4 === 0) strength -= 1;
+                log("Livello perso...");
+            }
+
+            render();
+        }
+
+        function log(msg) {
+            elLog.innerText = msg;
+            // Piccolo effetto fade
+            elLog.style.opacity = 1;
+            setTimeout(() => { elLog.style.opacity = 0.7; }, 1000);
+        }
+
+        // Avvia la UI iniziale
+        render();
+
+    </script>
+</body>
+</html>
