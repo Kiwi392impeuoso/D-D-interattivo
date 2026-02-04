@@ -158,12 +158,12 @@
 <body>
 
     <div class="character-sheet">
-        <h1 id="charName">Scruipo il Coraggioso</h1>
+        <h1 id="charName">Valeros il Coraggioso</h1>
         <div class="avatar">Guerriero Umano</div>
 
         <div class="stats-grid">
             <div class="stat-box">
-                <div class="stat-value" id="strStat"></div>
+                <div class="stat-value" id="strStat">10</div>
                 <div class="stat-label">Forza (STR)</div>
             </div>
             <div class="stat-box">
@@ -171,7 +171,7 @@
                 <div class="stat-label">Danni Spada</div>
             </div>
             <div class="stat-box">
-                <div class="stat-value" id="acStat">5</div>
+                <div class="stat-value" id="acStat">10</div>
                 <div class="stat-label">Classe Armatura</div>
             </div>
         </div>
@@ -180,7 +180,6 @@
             <span>LIVELLO ATTUALE:</span>
             <span style="font-size: 1.5rem;" id="levelDisplay">1</span>
             <div>
-                <button onclick=""
                 <button onclick="changeLevel(1)" style="width: auto; padding: 5px 10px;">+</button>
                 <button onclick="changeLevel(-1)" style="width: auto; padding: 5px 10px;">-</button>
             </div>
@@ -212,7 +211,7 @@
         let level = 1;
         let maxHp = 20;
         let currentHp = 20;
-        let strength = 18;
+        let strength = 10;
 
         // Elementi DOM
         const elLevel = document.getElementById('levelDisplay');
