@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scheda RPG Multiplayer</title>
+    <link href="https://fonts.googleapis.com/css2?family=MedievalSharp&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-paper: #f4e4bc;
+            --text-color: #2c1a0b;
+            --accent-red: #8a1c1c;
+            --accent-green: #2ecc71;
+            --accent-gold: #c5a00bd7;
+            --dark-border: #462c18;
+        }
+
+        body {
+            background-color: #1a1a1a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            font-family: 'MedievalSharp', cursive;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        /* --- CONTENITORI PRINCIPALI --- */
+        .app-container {
+            width: 100%;
+            max-width: 500px;
+            position: relative;
+        }
+
+        .paper-panel {
+            background-color: var(--bg-paper);
+            padding: 30px;
+            border-radius: 5px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5), inset 0 0 60px rgba(0,0,0,0.1);
+            border: 10px solid var(--dark-border);
+            margin-bottom: 20px;
+            display: none; /* Nascosto di default */
+            animation: fadeIn 0.5s ease;
+        }
+
+        .paper-panel.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h1, h2 {
+            text-align: center;
+            color: var(--text-color);
+            border-bottom: 2px solid var(--text-color);
+            padding-bottom: 10px;
+            margin-top: 0;
+        }
+
+        /* --- INPUT E MENU --- */
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: var(--text-color);
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            background: rgba(255,255,255,0.5);
+            border: 2px solid var(--dark-border);
+            border-radius: 5px;
+            font-family: 'MedievalSharp', cursive;
+            font-size: 1.1rem;
+            color: var(--text-color);
+            box-sizing: border-box;
+        }
+
+        /* --- SISTEMA PUNTI --- */
+        .points-display {
+            background: rgba(0,0,0,0.05);
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+            margin-bottom: 15px;
+            font-weight: bold;
+            border: 1px dashed var(--text-color);
+        }
+        
+        .stat-allocator {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(255,255,255,0.3);
+            padding: 8px;
+            border-radius: 5px;
+            margin-bottom: 8px;
+        }
+
+        .allocator-btn {
+            width: 30px;
+            height: 30px;
+            padding: 0;
+            line-height: 30px;
+            font-size: 1.2rem;
+            margin: 0 10px;
+        }
+
+        /* --- SCHEDA PERSONAGGIO --- */
+        .avatar {
+            text-align: center;
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            color: #555;
+            font-style: italic;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .stat-box {
+            border: 2px solid var(--text-color);
+            padding: 10px;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.3);
+            transition: transform 0.2s;
+        }
+        
+        .stat-box.updated {
+            transform: scale(1.1);
+            background: rgba(255, 215, 0, 0.3);
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .stat-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+        }
+
+        .level-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(0,0,0,0.05);
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        /* --- BARRE SALUTE --- */
+        .hp-container {
+            margin-bottom: 20px;
+        }
+
+        .hp-bar-bg {
+            background-color: #555;
+            height: 24px;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 2px solid var(--text-color);
+            position: relative;
+        }
+
+        .hp-bar-fill {
+            background-color: var(--accent-red);
+            height: 100%;
+            width: 100%;
+            transition: width 0.3s ease, background-color 0.3s;
+        }
+
+        .hp-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 0.8rem;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px black;
+            white-space: nowrap;
+        }
+
+        /* --- CONTROLLI --- */
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        button {
+            background-color: var(--text-color);
+            color: var(--bg-paper);
+            border: none;
+            padding: 12px 20px;
+            font-family: 'MedievalSharp', cursive;
+            font-size: 1.1rem;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: transform 0.1s;
+            width: 100%;
+            box-shadow: 0 4px 0 #1a0f06;
+        }
+
+        button:active {
+            transform: translateY(4px);
+            box-shadow: none;
+        }
+
+        button.heal { background-color: var(--accent-green); color: black; }
+        button.damage { background-color: var(--accent-red); color: white; }
+        button.start-btn { background-color: var(--text-color); color: #fff; margin-top: 10px; }
+        button.disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* --- PARTY LIST (MULTIPLAYER) --- */
+        .party-section {
+            margin-top: 30px;
+            border-top: 2px dashed var(--text-color);
+            padding-top: 20px;
+        }
+        
+        .party-title {
+            font-size: 1rem;
+            margin-bottom: 10px;
+            opacity: 0.8;
+            text-align: center;
+        }
+
+        .party-member {
+            background: rgba(0,0,0,0.05);
+            border: 1px solid var(--text-color);
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .member-info {
+            flex-grow: 1;
+        }
+        
+        .member-name { font-weight: bold; font-size: 0.9rem; }
+        .member-class { font-size: 0.7rem; font-style: italic; }
+
+        .member-hp {
+            width: 80px;
+        }
+
+        /* --- STATUS DIARIO --- */
+        .room-badge {
+            background: var(--text-color);
+            color: var(--bg-paper);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 2px solid #fff;
+            white-space: nowrap;
+        }
+
+        .cloud-status {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 0.7rem;
+            color: #555;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #ccc;
+        }
+        .status-indicator.online { background-color: var(--accent-green); }
+        .status-indicator.offline { background-color: #e74c3c; }
+
+        /* Banner per modalità offline */
+        .offline-banner {
+            background: #f1c40f;
+            color: #462c18;
+            text-align: center;
+            font-size: 0.8rem;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            display: none;
+            border: 1px solid #d35400;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        
+        <!-- MENU DI SETUP -->
+        <div id="setupPanel" class="paper-panel active">
+            <h1>Crea il tuo Eroe</h1>
+            <p style="text-align: center; font-size: 0.9rem; margin-bottom: 20px;">Preparati per l'avventura</p>
+
+            <!-- Banner Offline nel Menu -->
+            <div id="setupOfflineBanner" class="offline-banner">
+                <strong>MODALITÀ OFFLINE (GitHub/Locale)</strong><br>
+                Per abilitare il Multiplayer, apri questo file (index.html) con un editor di testo e inserisci la tua configurazione Firebase alla riga ~460.
+            </div>
+
+            <div class="form-group">
+                <label>Nome Personaggio</label>
+                <input type="text" id="inputName" placeholder="Es. Valeros" value="Valeros">
+            </div>
+
+            <div class="form-group">
+                <label>Classe e Razza</label>
+                <input type="text" id="inputClass" placeholder="Es. Guerriero Umano" value="Guerriero Umano">
+            </div>
+
+            <div class="form-group">
+                <div class="points-display">
+                    Punti Miglioramento: <span id="pointsDisplay" style="color:var(--accent-red); font-size: 1.2em;">10</span>
+                </div>
+
+                <div class="stat-allocator">
+                    <label style="margin:0; width: 100px;">Forza <br><small>(Min 10)</small></label>
+                    <div style="display:flex; align-items:center;">
+                        <button class="allocator-btn" onclick="adjustSetupStat('str', -1)">-</button>
+                        <span id="setupStrDisplay" style="font-size:1.2rem; font-weight:bold; width: 30px; text-align:center;">10</span>
+                        <button class="allocator-btn" onclick="adjustSetupStat('str', 1)">+</button>
+                    </div>
+                </div>
+
+                <div class="stat-allocator">
+                    <label style="margin:0; width: 100px;">HP Iniziali <br><small>(Min 20)</small></label>
+                    <div style="display:flex; align-items:center;">
+                        <button class="allocator-btn" onclick="adjustSetupStat('hp', -1)">-</button>
+                        <span id="setupHpDisplay" style="font-size:1.2rem; font-weight:bold; width: 30px; text-align:center;">20</span>
+                        <button class="allocator-btn" onclick="adjustSetupStat('hp', 1)">+</button>
+                    </div>
+                </div>
+            </div>
+
+            <hr style="border: 1px dashed var(--text-color); margin: 20px 0; opacity: 0.5;">
+
+            <div class="form-group" id="roomInputGroup">
+                <label>Codice Stanza (per giocare con amici)</label>
+                <input type="text" id="inputRoom" placeholder="Es. TAVERNA1" style="text-transform: uppercase; letter-spacing: 2px; text-align: center; font-weight: bold;">
+                <small style="display:block; text-align:center; margin-top:5px; opacity:0.7;">Condividi questo codice con i tuoi amici!</small>
+            </div>
+
+            <button class="start-btn" onclick="startGame()">INIZIA AVVENTURA</button>
+        </div>
+
+        <!-- SCHEDA DI GIOCO -->
+        <div id="gamePanel" class="paper-panel">
+            <div class="room-badge" id="roomDisplay">ROOM: ???</div>
+            
+            <div class="cloud-status">
+                <div class="status-indicator" id="statusInd"></div>
+                <span id="statusText">Connessione...</span>
+            </div>
+
+            <h1 id="charNameDisplay">Nome Eroe</h1>
+            <div class="avatar" id="charClassDisplay">Classe</div>
+
+            <div class="stats-grid">
+                <div class="stat-box" id="boxStr">
+                    <div class="stat-value" id="strStat">10</div>
+                    <div class="stat-label">Forza</div>
+                </div>
+                <div class="stat-box" id="boxDmg">
+                    <div class="stat-value" id="dmgStat">10</div>
+                    <div class="stat-label">Danni</div>
+                </div>
+                <div class="stat-box" id="boxAc">
+                    <div class="stat-value" id="acStat">10</div>
+                    <div class="stat-label">Armatura</div>
+                </div>
+            </div>
+
+            <div class="level-section">
+                <span>LIVELLO:</span>
+                <span style="font-size: 1.5rem;" id="levelDisplay">1</span>
+                <div>
+                    <button onclick="changeLevel(1)" style="width: auto; padding: 5px 12px;">+</button>
+                    <button onclick="changeLevel(-1)" style="width: auto; padding: 5px 12px;">-</button>
+                </div>
+            </div>
+
+            <div class="hp-container">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                    <span>Punti Ferita</span>
+                    <span id="hpText">20 / 20</span>
+                </div>
+                <div class="hp-bar-bg">
+                    <div class="hp-bar-fill" id="hpBar"></div>
+                    <div class="hp-text">SALUTE</div>
+                </div>
+            </div>
+
+            <div class="controls">
+                <button class="damage" onclick="updateHP(-5)">DANNO (-5)</button>
+                <button class="heal" onclick="updateHP(5)">CURA (+5)</button>
+            </div>
+            
+            <p style="text-align: center; font-size: 0.9rem; margin-top: 20px; opacity: 0.7; height: 1em;" id="logMsg">
+                <!-- Log messaggi -->
+            </p>
+
+            <!-- SEZIONE PARTY -->
+            <div class="party-section" id="partySection">
+                <div class="party-title">Compagni di Avventura</div>
+                <div id="partyList">
+                    <div style="text-align: center; font-size: 0.8rem; opacity: 0.5; padding: 10px;">
+                        In attesa di compagni nella stanza...
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Messaggio alternativo se Offline -->
+            <div id="offlinePartyMessage" style="display:none; text-align: center; margin-top: 20px; opacity: 0.6; font-size: 0.8rem; font-style: italic;">
+                Multiplayer disabilitato in modalità offline locale.
+            </div>
+
+            <button onclick="exitGame()" style="margin-top: 20px; background: transparent; border: 1px solid var(--text-color); color: var(--text-color); padding: 5px;">Esci al Menu</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot, collection, query, where, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- GESTIONE AMBIENTE (GEMINI VS ESTERNO) ---
+        
+        let firebaseConfig;
+        let appId = 'default-app-id';
+        let isGeminiEnvironment = false;
+        
+        // 1. Controlla se siamo in Gemini (Ambiente di sviluppo AI)
+        if (typeof __firebase_config !== 'undefined') {
+            firebaseConfig = JSON.parse(__firebase_config);
+            if (typeof __app_id !== 'undefined') appId = __app_id;
+            isGeminiEnvironment = true;
+        } else {
+            // 2. SE SEI FUORI DA GEMINI (ES. GITHUB PAGES)
+            // ------------------------------------------------------------------
+            // ISTRUZIONI PER ABILITARE IL MULTIPLAYER SU GITHUB:
+            // 1. Vai su https://console.firebase.google.com/ e crea un progetto.
+            // 2. Nel menu a sinistra, vai su "Build" > "Authentication" e clicca "Get Started".
+            // 3. Nella tab "Sign-in method", attiva "Anonymous" (Accesso anonimo).
+            // 4. Vai su "Build" > "Firestore Database" e clicca "Create database".
+            // 5. Scegli "Start in test mode" (importante per iniziare subito).
+            // 6. Clicca sull'icona ingranaggio (Project Settings) in alto a sinistra.
+            // 7. Scorri in basso fino a "Your apps" e clicca l'icona web (</>).
+            // 8. Copia l'oggetto 'firebaseConfig' (quello tra parentesi graffe) e incollalo qui sotto al posto di 'null'.
+            // ------------------------------------------------------------------
+            
+            const manualConfig = null; 
+            // Esempio:
+            // const manualConfig = {
+            //   apiKey: "AIzaSyD...",
+            //   authDomain: "rpg-project.firebaseapp.com",
+            //   projectId: "rpg-project",
+            //   storageBucket: "rpg-project.firebasestorage.app",
+            //   messagingSenderId: "123456789",
+            //   appId: "1:123456789:web:abcdef"
+            // };
+
+            if (manualConfig) {
+                firebaseConfig = manualConfig;
+            } else {
+                console.warn("Nessuna configurazione Firebase trovata. Modalità OFFLINE attivata.");
+            }
+        }
+
+        // --- INIZIALIZZAZIONE FIREBASE (SOLO SE C'È CONFIG) ---
+        let app, auth, db;
+        let isOnline = false;
+
+        if (firebaseConfig) {
+            try {
+                app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+                isOnline = true;
+            } catch (e) {
+                console.error("Errore init Firebase:", e);
+                isOnline = false;
+            }
+        }
+
+        // --- STATO GLOBALE ---
+        let currentUser = null;
+        let myDocRef = null;
+        let unsubscribeParty = null;
+        
+        // Setup Logic
+        let setupPoints = 10;
+        let setupStr = 10;
+        let setupHp = 20;
+        const MIN_STR = 10;
+        const MIN_HP = 20;
+
+        // Dati Personaggio
+        let charData = {
+            name: "Eroe",
+            class: "Avventuriero",
+            room: "TAVERNA",
+            level: 1,
+            maxHp: 20,
+            currentHp: 20,
+            strength: 10,
+            baseDmg: 10,
+            baseAc: 10
+        };
+
+        // Elementi DOM
+        const elSetup = document.getElementById('setupPanel');
+        const elGame = document.getElementById('gamePanel');
+        const elStatusInd = document.getElementById('statusInd');
+        const elStatusText = document.getElementById('statusText');
+        const elPartyList = document.getElementById('partyList');
+        const elOfflineBanner = document.getElementById('setupOfflineBanner');
+
+        // --- AUTH E AVVIO ---
+        
+        const initSystem = async () => {
+            if (isOnline) {
+                // MODALITÀ ONLINE (Gemini o Config manuale)
+                const initAuth = async () => {
+                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                        await signInWithCustomToken(auth, __initial_auth_token);
+                    } else {
+                        await signInAnonymously(auth);
+                    }
+                };
+                
+                onAuthStateChanged(auth, (user) => {
+                    currentUser = user;
+                    if (user) {
+                        elStatusInd.classList.add('online');
+                        elStatusText.innerText = "Online";
+                    }
+                });
+                
+                await initAuth();
+            } else {
+                // MODALITÀ OFFLINE (Locale)
+                console.log("Sistema avviato in modalità locale (LocalStorage).");
+                currentUser = { uid: "local-user-" + Date.now() }; // Mock user
+                elStatusInd.classList.add('offline');
+                elStatusText.innerText = "Locale (Offline)";
+                elOfflineBanner.style.display = "block";
+                
+                // Carica dati salvati localmente se esistono
+                loadLocalData();
+            }
+        };
+        
+        initSystem();
+
+        // --- SETUP LOGIC (POINTS SYSTEM) ---
+
+        window.adjustSetupStat = function(stat, change) {
+            if (change > 0 && setupPoints <= 0) return;
+
+            if (stat === 'str') {
+                if (change < 0 && setupStr <= MIN_STR) return;
+                setupStr += change;
+                setupPoints -= change;
+            } else if (stat === 'hp') {
+                if (change < 0 && setupHp <= MIN_HP) return;
+                setupHp += change;
+                setupPoints -= change;
+            }
+
+            document.getElementById('setupStrDisplay').innerText = setupStr;
+            document.getElementById('setupHpDisplay').innerText = setupHp;
+            document.getElementById('pointsDisplay').innerText = setupPoints;
+        }
+
+        // --- GESTIONE MENU E GIOCO ---
+
+        window.startGame = async function() {
+            if (isOnline && !currentUser) return alert("Attendi la connessione...");
+
+            // 1. Raccogli dati
+            const name = document.getElementById('inputName').value.trim() || "Senza Nome";
+            const cls = document.getElementById('inputClass').value.trim() || "Vagabondo";
+            const room = document.getElementById('inputRoom').value.trim().toUpperCase().replace(/\s/g, '') || "TAVERNA";
+
+            // 2. Aggiorna stato locale
+            charData.name = name;
+            charData.class = cls;
+            charData.strength = setupStr;
+            charData.maxHp = setupHp;
+            charData.currentHp = setupHp;
+            charData.room = room;
+            charData.level = 1;
+
+            // 3. Switch UI
+            elSetup.classList.remove('active');
+            elGame.classList.add('active');
+            
+            document.getElementById('roomDisplay').innerText = "STANZA: " + room;
+            document.getElementById('charNameDisplay').innerText = name;
+            document.getElementById('charClassDisplay').innerText = cls;
+
+            // Nascondi o mostra Party Section in base alla modalità
+            if (isOnline) {
+                document.getElementById('partySection').style.display = 'block';
+                document.getElementById('offlinePartyMessage').style.display = 'none';
+                await joinRoom(room);
+            } else {
+                document.getElementById('partySection').style.display = 'none';
+                document.getElementById('offlinePartyMessage').style.display = 'block';
+                saveLocalData(); // Salva subito in locale
+            }
+
+            render();
+        };
+
+        window.exitGame = async function() {
+            if (isOnline) {
+                if (unsubscribeParty) unsubscribeParty();
+                if (myDocRef) {
+                    try { await deleteDoc(myDocRef); } catch(e){} 
+                }
+            } else {
+                // Offline: salva prima di uscire
+                saveLocalData();
+            }
+            
+            // Reset Setup
+            setupPoints = 10;
+            setupStr = MIN_STR;
+            setupHp = MIN_HP;
+            window.adjustSetupStat('str', 0);
+
+            elGame.classList.remove('active');
+            elSetup.classList.add('active');
+        };
+
+        // --- LOCAL STORAGE HELPERS (OFFLINE) ---
+        function saveLocalData() {
+            if(!isOnline) {
+                localStorage.setItem('dnd_char_data', JSON.stringify(charData));
+                elStatusText.innerText = "Salvato (Locale)";
+                setTimeout(() => elStatusText.innerText = "Locale (Offline)", 1000);
+            }
+        }
+
+        function loadLocalData() {
+            const saved = localStorage.getItem('dnd_char_data');
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    // Riempiamo i campi del setup con gli ultimi usati (opzionale)
+                    document.getElementById('inputName').value = parsed.name || "";
+                    document.getElementById('inputClass').value = parsed.class || "";
+                } catch(e) {}
+            }
+        }
+
+        // --- LOGICA CLOUD MULTIPLAYER (ONLINE) ---
+
+        async function joinRoom(roomCode) {
+            if (!currentUser || !isOnline) return;
+            
+            const docId = `${roomCode}_${currentUser.uid}`;
+            myDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'rpg_players', docId);
+
+            await saveToCloud();
+
+            const playersRef = collection(db, 'artifacts', appId, 'public', 'data', 'rpg_players');
+            const q = query(playersRef, where("room", "==", roomCode));
+
+            unsubscribeParty = onSnapshot(q, (snapshot) => {
+                const partyMembers = [];
+                snapshot.forEach((doc) => {
+                    if (doc.id !== docId) {
+                        partyMembers.push(doc.data());
+                    }
+                });
+                renderParty(partyMembers);
+            }, (err) => {
+                console.error("Errore party:", err);
+            });
+        }
+
+        async function saveToCloud() {
+            if (!myDocRef || !isOnline) return;
+            
+            elStatusText.innerText = "Sync...";
+            try {
+                await setDoc(myDocRef, {
+                    uid: currentUser.uid,
+                    room: charData.room,
+                    name: charData.name,
+                    class: charData.class,
+                    level: charData.level,
+                    currentHp: charData.currentHp,
+                    maxHp: charData.maxHp,
+                    lastUpdate: Date.now()
+                });
+                elStatusText.innerText = "Online";
+            } catch (e) {
+                console.error("Save error", e);
+            }
+        }
+
+        function renderParty(members) {
+            elPartyList.innerHTML = "";
+            if (members.length === 0) {
+                elPartyList.innerHTML = `<div style="text-align: center; font-size: 0.8rem; opacity: 0.5; padding: 10px;">Nessun altro eroe qui.</div>`;
+                return;
+            }
+            members.forEach(member => {
+                const hpPercent = Math.max(0, Math.min(100, (member.currentHp / member.maxHp) * 100));
+                let barColor = "#8a1c1c";
+                if(hpPercent < 30) barColor = "#c0392b";
+                else if(hpPercent < 60) barColor = "#e67e22";
+
+                const html = `
+                <div class="party-member">
+                    <div class="member-info">
+                        <div class="member-name">${member.name} <span style="font-weight:normal; font-size:0.7em;">(Liv. ${member.level})</span></div>
+                        <div class="member-class">${member.class}</div>
+                    </div>
+                    <div class="member-hp">
+                        <div style="font-size: 0.6rem; text-align: center; margin-bottom: 2px;">HP: ${member.currentHp}/${member.maxHp}</div>
+                        <div style="background: #555; height: 6px; border-radius: 3px; overflow: hidden;">
+                            <div style="width: ${hpPercent}%; background: ${barColor}; height: 100%;"></div>
+                        </div>
+                    </div>
+                </div>`;
+                elPartyList.innerHTML += html;
+            });
+        }
+
+        // --- LOGICA DI GIOCO (LOCALE) ---
+        const elLevel = document.getElementById('levelDisplay');
+        const elHpText = document.getElementById('hpText');
+        const elHpBar = document.getElementById('hpBar');
+        const elLog = document.getElementById('logMsg');
+        const elStr = document.getElementById('strStat');
+        const elDmg = document.getElementById('dmgStat');
+        const elAc = document.getElementById('acStat');
+
+        function render() {
+            let strMod = Math.floor((charData.strength - 10) / 2);
+            let damage = charData.baseDmg + strMod + Math.floor(charData.level / 2);
+            let ac = charData.baseAc + Math.floor(charData.level / 2);
+
+            elLevel.innerText = charData.level;
+            elHpText.innerText = `${charData.currentHp} / ${charData.maxHp}`;
+            elStr.innerText = charData.strength;
+            elDmg.innerText = damage;
+            elAc.innerText = ac;
+
+            let percentage = (charData.currentHp / charData.maxHp) * 100;
+            if (percentage < 0) percentage = 0;
+            if (percentage > 100) percentage = 100;
+            
+            elHpBar.style.width = percentage + "%";
+            if (percentage < 30) elHpBar.style.backgroundColor = "#c0392b"; 
+            else if (percentage < 60) elHpBar.style.backgroundColor = "#e67e22"; 
+            else elHpBar.style.backgroundColor = "#8a1c1c"; 
+        }
+
+        window.updateHP = function(amount) {
+            charData.currentHp += amount;
+            if (charData.currentHp > charData.maxHp) charData.currentHp = charData.maxHp;
+            if (charData.currentHp < 0) charData.currentHp = 0;
+
+            if (amount < 0) log("Ahia! Hai subito danni.");
+            else log("Ti senti rinvigorito.");
+
+            render();
+            if (isOnline) saveToCloud();
+            else saveLocalData();
+        };
+
+        window.changeLevel = function(amount) {
+            let oldLevel = charData.level;
+            charData.level += amount;
+            if (charData.level < 1) charData.level = 1;
+
+            if (charData.level > oldLevel) {
+                charData.maxHp += 1; 
+                charData.currentHp += 1; 
+                charData.strength += 1;
+                highlightStat("boxStr");
+                highlightStat("boxDmg"); 
+                if (Math.floor(charData.level / 2) > Math.floor(oldLevel / 2)) highlightStat("boxAc");
+                log("LEVEL UP!");
+            } else if (charData.level < oldLevel) {
+                charData.maxHp -= 1; 
+                if (charData.currentHp > charData.maxHp) charData.currentHp = charData.maxHp;
+                charData.strength -= 1;
+                log("Livello perso...");
+            }
+
+            render();
+            if (isOnline) saveToCloud();
+            else saveLocalData();
+        };
+
+        function highlightStat(id) {
+            const el = document.getElementById(id);
+            if(el) {
+                el.classList.add('updated');
+                setTimeout(() => el.classList.remove('updated'), 500);
+            }
+        }
+
+        function log(msg) {
+            if(!elLog) return;
+            elLog.innerText = msg;
+            elLog.style.opacity = 1;
+            setTimeout(() => { elLog.style.opacity = 0.7; }, 1000);
+        }
+
+    </script>
+</body>
+</html>
